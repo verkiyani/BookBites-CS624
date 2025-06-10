@@ -1,27 +1,34 @@
+import React, { useContext } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { MyListContext } from './_layout';
+import { useRouter } from 'expo-router';
 
-const MyListScreen = ({ myList, setMyList, navigation }) => (
-    <View style={styles.container}>
-        <Text style={styles.header}>My List</Text>
-        {myList.length === 0 ? (
-            <Text style={styles.emptyText}>Your list is empty.</Text>
-        ) : (
-            <ScrollView>
-                {myList.map(book => (
-                    <TouchableOpacity 
-                        key={book.id} 
-                        style={styles.bookItem}
-                        onPress={() => navigation.navigate('BookDetail', { book })}
-                    >
-                        <Image source={book.image} style={styles.bookImage}/>
-                        <Text style={styles.bookTitle}>{book.title}</Text>
-                        <Text style={styles.bookAuthor}>by {book.author}</Text>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
-        )}
-    </View>
-);
+const MyListScreen = () => {
+    const { myList } = useContext(MyListContext);
+    const router = useRouter();
+    return (
+        <View style={styles.container}>
+            <Text style={styles.header}>My List</Text>
+            {myList.length === 0 ? (
+                <Text style={styles.emptyText}>Your list is empty.</Text>
+            ) : (
+                <ScrollView>
+                    {myList.map(book => (
+                        <TouchableOpacity 
+                            key={book.id} 
+                            style={styles.bookItem}
+                            onPress={() => router.push({ pathname: '/BookDetailScreen', params: { book: JSON.stringify(book) } })}
+                        >
+                            <Image source={book.image} style={styles.bookImage}/>
+                            <Text style={styles.bookTitle}>{book.title}</Text>
+                            <Text style={styles.bookAuthor}>by {book.author}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            )}
+        </View>
+    );
+};
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 20, backgroundColor: '#fff' },

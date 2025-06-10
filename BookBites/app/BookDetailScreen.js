@@ -1,16 +1,18 @@
-import { useState } from 'react';
+import React from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { Button, Image, Picker, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-const BookDetailScreen = ({ props }) => {
-    const { book } = props.route.params;
-    const [rating, setRating] = useState('5');
-    const [comment, setComment] = useState('');
-    const [discussion, setDiscussion] = useState('');
-    const [quote, setQuote] = useState('');
-    const [pageNumber, setPageNumber] = useState('');
-    const [comments, setComments] = useState([]);
-    const [discussions, setDiscussions] = useState([]);
-    const [quotes, setQuotes] = useState([]);
+const BookDetailScreen = () => {
+    const params = useLocalSearchParams();
+    const book = params.book ? JSON.parse(params.book) : {};
+    const [rating, setRating] = React.useState('5');
+    const [comment, setComment] = React.useState('');
+    const [discussion, setDiscussion] = React.useState('');
+    const [quote, setQuote] = React.useState('');
+    const [pageNumber, setPageNumber] = React.useState('');
+    const [comments, setComments] = React.useState([]);
+    const [discussions, setDiscussions] = React.useState([]);
+    const [quotes, setQuotes] = React.useState([]);
 
     const submitRating = () => {
         setComments([...comments, { rating, comment, date: new Date().toLocaleDateString() }]);

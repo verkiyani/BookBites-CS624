@@ -1,7 +1,7 @@
 import Home from './Home';
 
-export default function HomeScreen(props) {
+export default function HomeScreen() {
   return (
-    <Home {...props} />
+    <Home />
   );
 }

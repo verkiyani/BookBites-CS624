@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Button, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-const Home = ({ navigation, myList, setMyList }) => {
+import { MyListContext } from './_layout';
+import { useRouter } from 'expo-router';
+
+const Home = () => {
+    const { myList, setMyList } = useContext(MyListContext);
+    const router = useRouter();
     const [showMyList, setShowMyList] = useState(false);
     const [addedMessage, setAddedMessage] = useState('');
 
@@ -22,7 +27,7 @@ const Home = ({ navigation, myList, setMyList }) => {
         <View style={styles.container}>
             <TouchableOpacity
                 style={styles.myListButton}
-                onPress={() => navigation.navigate('My List')}
+                onPress={() => router.push('/MyListScreen')}
             >
                 <Text style={styles.myListButtonText}>My List</Text>
             </TouchableOpacity>
@@ -47,7 +52,7 @@ const Home = ({ navigation, myList, setMyList }) => {
                     <TouchableOpacity
                         key={book.id}
                         style={styles.bookItem}
-                        onPress={() => navigation.navigate('BookDetail', { book })}
+                        onPress={() => router.push({ pathname: '/BookDetailScreen', params: { book: JSON.stringify(book) } })}
                     >
                         <View style={styles.bookContent}>
                             <Image source={book.image} style={styles.bookImage}/>
