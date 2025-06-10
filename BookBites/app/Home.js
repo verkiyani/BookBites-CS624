@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Button, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { MyListContext } from './_layout';
+import { useRouter } from 'expo-router';
 
-const HomeScreen = ({ navigation }) => {
-    const [myList, setMyList] = useState([]);
+const Home = () => {
+    const { myList, setMyList } = useContext(MyListContext);
+    const router = useRouter();
     const [showMyList, setShowMyList] = useState(false);
     const [addedMessage, setAddedMessage] = useState('');
 
@@ -22,17 +25,13 @@ const HomeScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            {/* Nav button at the top */}
             <TouchableOpacity
                 style={styles.myListButton}
-                onPress={() => setShowMyList(!showMyList)}
+                onPress={() => router.push('/MyListScreen')}
             >
-                <Text style={styles.myListButtonText}>
-                    {showMyList ? 'Back to Home' : 'My List'}
-                </Text>
+                <Text style={styles.myListButtonText}>My List</Text>
             </TouchableOpacity>
 
-            {/* Show message when a book is added */}
             {addedMessage !== '' && (
                 <View style={styles.messageBox}>
                     <Text style={styles.messageText}>{addedMessage}</Text>
@@ -46,32 +45,37 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.header}>Welcome to BookBites</Text>
             <Text style={styles.subheader}>Discover and share the books you love.</Text>
 
-            <Text style={styles.sectionTitle}>
-                {showMyList ? 'My List' : 'Popular Now'}
-            </Text>
+            <Text style={styles.sectionTitle}>Popular Now</Text>
 
             <ScrollView style={styles.bookList}>
-                {(showMyList ? myList : bookExamples).map(book => (
-                    <View key={book.id} style={styles.bookItem}>
-                        <Image source={book.image} style={styles.bookImage}/>
-                        <Text style={styles.bookTitle}>{book.title}</Text>
-                        <Text style={styles.bookAuthor}>by {book.author}</Text>
-                        {!showMyList && (
-                            <Button title="Add to my list" onPress={() => addToList(book)} />
-                        )}
-                    </View>
+                {bookExamples.map(book => (
+                    <TouchableOpacity
+                        key={book.id}
+                        style={styles.bookItem}
+                        onPress={() => router.push({ pathname: '/BookDetailScreen', params: { book: JSON.stringify(book) } })}
+                    >
+                        <View style={styles.bookContent}>
+                            <Image source={book.image} style={styles.bookImage}/>
+                            <View style={styles.bookInfo}>
+                                <Text style={styles.bookTitle}>{book.title}</Text>
+                                <Text style={styles.bookAuthor}>by {book.author}</Text>
+                                <Button 
+                                    title="Add to my list" 
+                                    onPress={(e) => {
+                                        e.stopPropagation();
+                                        addToList(book);
+                                    }} 
+                                />
+                            </View>
+                        </View>
+                    </TouchableOpacity>
                 ))}
-                {showMyList && myList.length === 0 && (
-                    <Text style={{ textAlign: 'center', color: '#888', marginTop: 20 }}>
-                        Your list is empty.
-                    </Text>
-                )}
             </ScrollView>
         </View>
     );
 };
 
-export default HomeScreen;
+export default Home;
 
 const styles = StyleSheet.create({
     container: { 
@@ -119,6 +123,14 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 10,
         marginBottom: 15,
+    },
+    bookContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    bookInfo: {
+        flex: 1,
+        marginLeft: 15,
     },
     bookImage: {
         width: 60, 
