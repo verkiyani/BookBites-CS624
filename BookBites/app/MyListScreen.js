@@ -1,6 +1,6 @@
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const MyListScreen = ({ myList }) => (
+const MyListScreen = ({ myList, setMyList, navigation }) => (
     <View style={styles.container}>
         <Text style={styles.header}>My List</Text>
         {myList.length === 0 ? (
@@ -8,11 +8,15 @@ const MyListScreen = ({ myList }) => (
         ) : (
             <ScrollView>
                 {myList.map(book => (
-                    <View key={book.id} style={styles.bookItem}>
+                    <TouchableOpacity 
+                        key={book.id} 
+                        style={styles.bookItem}
+                        onPress={() => navigation.navigate('BookDetail', { book })}
+                    >
                         <Image source={book.image} style={styles.bookImage}/>
                         <Text style={styles.bookTitle}>{book.title}</Text>
                         <Text style={styles.bookAuthor}>by {book.author}</Text>
-                    </View>
+                    </TouchableOpacity>
                 ))}
             </ScrollView>
         )}
@@ -28,6 +32,8 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 10,
         marginBottom: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     bookImage: {
         width: 60, 

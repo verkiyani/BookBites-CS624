@@ -1,6 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useState } from 'react';
+import BookDetailScreen from './BookDetailScreen';
 import HomeScreen from './Home';
 import MyListScreen from './MyListScreen';
 
@@ -16,7 +17,10 @@ export default function App() {
           {props => <HomeScreen {...props} myList={myList} setMyList={setMyList} />}
         </Stack.Screen>
         <Stack.Screen name="My List">
-          {props => <MyListScreen {...props} myList={myList} />}
+          {props => <MyListScreen {...props} myList={myList} setMyList={setMyList} />}
+        </Stack.Screen>
+        <Stack.Screen name="BookDetail">
+          {props => <BookDetailScreen {...props} />}
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
