@@ -1,22 +1,28 @@
-import React, { useContext, useState } from 'react';
-import { Button, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useContext, useState, useEffect } from 'react';
+import { Button, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
 import { MyListContext } from './_layout';
 import { useRouter } from 'expo-router';
+
+const API_BASE = Platform.OS === 'web'
+  ? 'http://localhost:3000'
+  : 'http://10.0.2.2:3000'; // Adjust for your dev env
 
 const Home = () => {
     const { myList, setMyList } = useContext(MyListContext);
     const router = useRouter();
     const [showMyList, setShowMyList] = useState(false);
     const [addedMessage, setAddedMessage] = useState('');
+    const [bookExamples, setBookExamples] = useState([]);
 
-    const bookExamples = [
-        {id: 1, title: '1984', author: 'George Orwell', image: require('../assets/images/1984.jpg') }, 
-        {id: 2, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', image: require('../assets/images/greatgatsby.jpg')},
-        {id: 3, title: 'To Kill a Mockingbird', author: 'Harper Lee', image: require('../assets/images/tokillamockingbird.png')},
-    ]; 
+    useEffect(() => {
+        fetch(`${API_BASE}/api/books`)
+            .then(res => res.json())
+            .then(data => setBookExamples(data))
+            .catch(() => setBookExamples([]));
+    }, []);
 
     const addToList = (book) => {
-        if (!myList.some(item => item.id === book.id)) {
+        if (!myList.some(item => item._id === book._id)) {
             setMyList([...myList, book]);
             setAddedMessage(`"${book.title}" has been added to your list.`);
             setTimeout(() => setAddedMessage(''), 1500);
@@ -50,12 +56,12 @@ const Home = () => {
             <ScrollView style={styles.bookList}>
                 {bookExamples.map(book => (
                     <TouchableOpacity
-                        key={book.id}
+                        key={book._id}
                         style={styles.bookItem}
                         onPress={() => router.push({ pathname: '/BookDetailScreen', params: { book: JSON.stringify(book) } })}
                     >
                         <View style={styles.bookContent}>
-                            <Image source={book.image} style={styles.bookImage}/>
+                            <Image source={typeof book.image === 'string' ? { uri: book.image } : book.image} style={styles.bookImage}/>
                             <View style={styles.bookInfo}>
                                 <Text style={styles.bookTitle}>{book.title}</Text>
                                 <Text style={styles.bookAuthor}>by {book.author}</Text>

@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocalSearchParams } from 'expo-router';
-import { Button, Image, Picker, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Button, Image, ScrollView, StyleSheet, Text, TextInput, View, Platform } from 'react-native';
+
+const API_BASE = Platform.OS === 'web'
+  ? 'http://localhost:8081/'
+  : 'http://10.0.2.2:3000'; // Adjust for your dev env
 
 const BookDetailScreen = () => {
     const params = useLocalSearchParams();
@@ -14,18 +18,49 @@ const BookDetailScreen = () => {
     const [discussions, setDiscussions] = React.useState([]);
     const [quotes, setQuotes] = React.useState([]);
 
-    const submitRating = () => {
-        setComments([...comments, { rating, comment, date: new Date().toLocaleDateString() }]);
+    // Fetch data from MongoDB on mount
+    useEffect(() => {
+        if (!book._id) return;
+        fetch(`${API_BASE}/api/book/${book._id}/all`)
+            .then(res => res.json())
+            .then(data => {
+                setComments(data.comments || []);
+                setDiscussions(data.discussions || []);
+                setQuotes(data.quotes || []);
+            })
+            .catch(() => {});
+    }, [book._id]);
+
+    const submitRating = async () => {
+        const payload = { rating, comment, date: new Date().toLocaleDateString() };
+        await fetch(`${API_BASE}/api/book/${book._id}/review`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        setComments([...comments, payload]);
         setComment('');
     };
 
-    const submitDiscussion = () => {
-        setDiscussions([...discussions, { text: discussion, date: new Date().toLocaleDateString() }]);
+    const submitDiscussion = async () => {
+        const payload = { text: discussion, date: new Date().toLocaleDateString() };
+        await fetch(`${API_BASE}/api/book/${book._id}/discussion`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        setDiscussions([...discussions, payload]);
         setDiscussion('');
     };
 
-    const submitQuote = () => {
-        setQuotes([...quotes, { text: quote, page: pageNumber, date: new Date().toLocaleDateString() }]);
+    const submitQuote = async () => {
+        const payload = { text: quote, page: pageNumber, date: new Date().toLocaleDateString() };
+        await fetch(`${API_BASE}/api/book/${book._id}/quote`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        setQuotes([...quotes, payload]);
         setQuote('');
         setPageNumber('');
     };
@@ -33,9 +68,9 @@ const BookDetailScreen = () => {
     return (
         <ScrollView style={styles.container}>
             <View style={styles.bookHeader}>
-                <Image source={book.image} style={styles.bookImage} />
+                <Image source={typeof book.image === 'string' ? { uri: book.image } : book.image} style={styles.bookImage} />
                 <View style={styles.bookInfo}>
-                    <Text style={styles.title}>{book.title}</Text>
+                    <Text style={styles.title}>{book.name}</Text>
                     <Text style={styles.author}>by {book.author}</Text>
                 </View>
             </View>
