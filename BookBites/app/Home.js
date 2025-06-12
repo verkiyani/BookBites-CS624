@@ -3,9 +3,7 @@ import { Button, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Pl
 import { MyListContext } from './_layout';
 import { useRouter } from 'expo-router';
 
-const API_BASE = Platform.OS === 'web'
-  ? 'http://localhost:3000'
-  : 'http://10.0.2.2:3000'; // Adjust for your dev env
+const API_BASE ='http://localhost:3000'
 
 const Home = () => {
     const { myList, setMyList } = useContext(MyListContext);
@@ -47,6 +45,7 @@ const Home = () => {
             <Image
                 source={require('../assets/images/books.jpg')}
                 style={styles.bannerImage}
+                resizeMode="contain"
             />
             <Text style={styles.header}>Welcome to BookBites</Text>
             <Text style={styles.subheader}>Discover and share the books you love.</Text>
@@ -103,8 +102,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     bannerImage: {
-        width: '100%', 
-        height: 200
+        width: 300,
+        height: 200,
+        alignSelf: 'center',
     },
     header: { 
         fontSize: 26, 
@@ -141,7 +141,6 @@ const styles = StyleSheet.create({
     bookImage: {
         width: 60, 
         height: 90,
-        resizeMode: 'cover',
         borderRadius: 5,
         marginRight: 15,
     },
