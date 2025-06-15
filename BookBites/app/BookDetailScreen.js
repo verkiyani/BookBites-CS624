@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocalSearchParams } from 'expo-router';
-import { Button, Image, Picker, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Button, Image, ScrollView, StyleSheet, Text, TextInput, View, Platform } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+
+const API_BASE = "http://localhost:3000"
 
 const BookDetailScreen = () => {
     const params = useLocalSearchParams();
@@ -14,28 +17,81 @@ const BookDetailScreen = () => {
     const [discussions, setDiscussions] = React.useState([]);
     const [quotes, setQuotes] = React.useState([]);
 
-    const submitRating = () => {
-        setComments([...comments, { rating, comment, date: new Date().toLocaleDateString() }]);
+    // Fetch data from MongoDB on mount
+    useEffect(() => {
+        if (!book._id) return;
+        fetch(`${API_BASE}/api/book/${book._id}/all`)
+            .then(res => res.json())
+            .then(data => {
+                setComments(data.comments || []);
+                setDiscussions(data.discussions || []);
+                setQuotes(data.quotes || []);
+            })
+            .catch(() => {});
+    }, [book._id]);
+
+    const submitRating = async () => {
+        const payload = { rating, comment, date: new Date().toLocaleDateString() };
+        await fetch(`${API_BASE}/api/book/${book._id}/comments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        setComments([...comments, payload]);
         setComment('');
     };
 
-    const submitDiscussion = () => {
-        setDiscussions([...discussions, { text: discussion, date: new Date().toLocaleDateString() }]);
+    const submitDiscussion = async () => {
+        const payload = { text: discussion, date: new Date().toLocaleDateString() };
+        await fetch(`${API_BASE}/api/book/${book._id}/discussion`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        setDiscussions([...discussions, payload]);
         setDiscussion('');
     };
 
-    const submitQuote = () => {
-        setQuotes([...quotes, { text: quote, page: pageNumber, date: new Date().toLocaleDateString() }]);
+    const submitQuote = async () => {
+        const payload = { text: quote, page: pageNumber, date: new Date().toLocaleDateString() };
+        await fetch(`${API_BASE}/api/book/${book._id}/quote`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        setQuotes([...quotes, payload]);
         setQuote('');
         setPageNumber('');
+    };
+
+    const deleteEntry = async (type, identifier) => {
+        if (!book._id) return;
+        await fetch(`${API_BASE}/api/book/${book._id}/${type}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(identifier),
+        });
+        if (type === 'comments') {
+            setComments(comments.filter(
+                (item) => !(item.date === identifier.date && item.comment === identifier.comment && item.rating === identifier.rating)
+            ));
+        } else if (type === 'discussion') {
+            setDiscussions(discussions.filter(
+                (item) => !(item.date === identifier.date && item.text === identifier.text)
+            ));
+        } else if (type === 'quote') {
+            setQuotes(quotes.filter(
+                (item) => !(item.date === identifier.date && item.text === identifier.text && item.page === identifier.page)
+            ));
+        }
     };
 
     return (
         <ScrollView style={styles.container}>
             <View style={styles.bookHeader}>
-                <Image source={book.image} style={styles.bookImage} />
+                <Image source={typeof book.image === 'string' ? { uri: book.image } : book.image} style={styles.bookImage} />
                 <View style={styles.bookInfo}>
-                    <Text style={styles.title}>{book.title}</Text>
+                    <Text style={styles.title}>{book.name}</Text>
                     <Text style={styles.author}>by {book.author}</Text>
                 </View>
             </View>
@@ -58,13 +114,20 @@ const BookDetailScreen = () => {
                     multiline
                 />
                 <Button title="Submit Review" onPress={submitRating} />
-                {comments.map((item, index) => (
-                    <View key={index} style={styles.reviewItem}>
-                        <Text>Rating: {item.rating} stars</Text>
-                        <Text>{item.comment}</Text>
-                        <Text style={styles.date}>{item.date}</Text>
-                    </View>
-                ))}
+                <ScrollView style={{maxHeight: 200}}>
+                    {comments.map((item, index) => (
+                        <View key={index} style={styles.reviewItem}>
+                            <Text>Rating: {item.rating} stars</Text>
+                            <Text>{item.comment}</Text>
+                            <Text style={styles.date}>{item.date}</Text>
+                            <Button
+                                title="Delete"
+                                color="#d9534f"
+                                onPress={() => deleteEntry('comments', { date: item.date, comment: item.comment, rating: item.rating })}
+                            />
+                        </View>
+                    ))}
+                </ScrollView>
             </View>
 
             <View style={styles.section}>
@@ -77,12 +140,19 @@ const BookDetailScreen = () => {
                     multiline
                 />
                 <Button title="Post" onPress={submitDiscussion} />
-                {discussions.map((item, index) => (
-                    <View key={index} style={styles.discussionItem}>
-                        <Text>{item.text}</Text>
-                        <Text style={styles.date}>{item.date}</Text>
-                    </View>
-                ))}
+                <ScrollView style={{maxHeight: 200}}>
+                    {discussions.map((item, index) => (
+                        <View key={index} style={styles.discussionItem}>
+                            <Text>{item.text}</Text>
+                            <Text style={styles.date}>{item.date}</Text>
+                            <Button
+                                title="Delete"
+                                color="#d9534f"
+                                onPress={() => deleteEntry('discussion', { date: item.date, text: item.text })}
+                            />
+                        </View>
+                    ))}
+                </ScrollView>
             </View>
 
             <View style={styles.section}>
@@ -102,13 +172,20 @@ const BookDetailScreen = () => {
                     keyboardType="numeric"
                 />
                 <Button title="Add Quote" onPress={submitQuote} />
-                {quotes.map((item, index) => (
-                    <View key={index} style={styles.quoteItem}>
-                        <Text>"{item.text}"</Text>
-                        <Text>Page: {item.page}</Text>
-                        <Text style={styles.date}>{item.date}</Text>
-                    </View>
-                ))}
+                <ScrollView style={{maxHeight: 200}}>
+                    {quotes.map((item, index) => (
+                        <View key={index} style={styles.quoteItem}>
+                            <Text>"{item.text}"</Text>
+                            <Text>Page: {item.page}</Text>
+                            <Text style={styles.date}>{item.date}</Text>
+                            <Button
+                                title="Delete"
+                                color="#d9534f"
+                                onPress={() => deleteEntry('quote', { date: item.date, text: item.text, page: item.page })}
+                            />
+                        </View>
+                    ))}
+                </ScrollView>
             </View>
         </ScrollView>
     );
